@@ -267,6 +267,9 @@ function qrImg(text, size=220){
 }
 
 /* ---------------- Router ---------------- */
+let adminUnlocked = false;
+let adminInterval = null;
+
 const app = document.getElementById('app');
 
 window.addEventListener('hashchange', render);
@@ -545,9 +548,6 @@ window.submitChallenge = submitChallenge;
 window.submitCode = submitCode;
 
 /* ---------------- Admin ---------------- */
-let adminUnlocked = false;
-let adminInterval = null;
-
 async function renderAdmin(){
   if(!adminUnlocked){
     app.innerHTML = `
