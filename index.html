@@ -80,8 +80,6 @@
   .hidden{display:none !important;}
 
   a{color:var(--navy);}
-  .qr-block{background:var(--paper);border:2px solid var(--navy);padding:16px;text-align:center;margin-bottom:20px;}
-  .qr-block img{width:200px;height:200px;image-rendering:pixelated;}
 
   table.admin{width:100%;border-collapse:collapse;font-size:14px;}
   table.admin th, table.admin td{border:1px solid var(--navy);padding:8px;text-align:left;vertical-align:top;}
@@ -115,13 +113,6 @@ const RESTAURANT = {
   note: "Cerrá los ojos y disfrutá, que el resto ya está organizado."
 };
 
-const CODES = {
-  toStation2: "CUBANO25",
-  toStation3: "OASIS10",
-  toStation4: "PILLIS100",
-  final: "FELICES"
-};
-
 const STATIONS = [
   {
     id: 1,
@@ -135,8 +126,7 @@ const STATIONS = [
     challenges: [
       { id: "a", type: "audio", label: "El ruido que la delata", instructions: "Grabá un audio haciendo el ruido que hace la lancha cuando roza contra las defensas al estacionar. Sé fiel al sonido, ¡se va a evaluar la actuación!" },
       { id: "b", type: "photo", label: "La pose clásica", instructions: "Sacate una foto en la posición clásica de estacionamiento: parado en la parte delantera de la lancha, agarrado del palo." }
-    ],
-    unlockCode: CODES.toStation2
+    ]
   },
   {
     id: 2,
@@ -150,8 +140,7 @@ const STATIONS = [
     challenges: [
       { id: "a", type: "video", label: "Maestro colador", instructions: "Filmate preparando una colada, con toda la técnica que te caracteriza." },
       { id: "b", type: "text", label: "El sanguche perfecto", instructions: "Escribí cuáles son los ingredientes principales de un sándwich cubano." }
-    ],
-    unlockCode: CODES.toStation3
+    ]
   },
   {
     id: 3,
@@ -165,8 +154,7 @@ const STATIONS = [
     challenges: [
       { id: "a", type: "video", label: "Diez y contando", instructions: "Grabate haciendo 10 sentadillas (o algún otro ejercicio de 10 repeticiones), con toda la garra." },
       { id: "b", type: "video", label: "Personal trainer por un día", instructions: "SUGERENCIA — reemplazá si tenés otra idea: grabá 15 segundos 'entrenando' a otra persona del auto, dándole una orden bien exigente de entrenador personal." }
-    ],
-    unlockCode: CODES.toStation4
+    ]
   },
   {
     id: 4,
@@ -180,10 +168,11 @@ const STATIONS = [
     challenges: [
       { id: "a", type: "photo", label: "La foto con Pillis", instructions: "Sacate una foto con Pillis o con la otra chica que atiende." },
       { id: "b", type: "video_or_photo", label: "De mesero por un rato", instructions: "Serví un café o algún plato a una mesa — foto o video corto de la hazaña." }
-    ],
-    unlockCode: CODES.final
+    ]
   }
 ];
+
+const NEXT_UNLOCK_KEY = { 1: 'unlocked_2', 2: 'unlocked_3', 3: 'unlocked_4', 4: 'unlocked_final' };
 
 /* ========================================================================= */
 
@@ -262,13 +251,11 @@ function showToast(msg, ms = 3600){
 function mapsLink(coords){
   return `https://www.google.com/maps/search/?api=1&query=${coords[0]},${coords[1]}`;
 }
-function qrImg(text, size=220){
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
-}
 
 /* ---------------- Router ---------------- */
 let adminUnlocked = false;
 let adminInterval = null;
+let guestPollInterval = null;
 
 const app = document.getElementById('app');
 
@@ -278,25 +265,34 @@ render();
 async function render(){
   const hash = window.location.hash;
   if(hash === '#admin'){ return renderAdmin(); }
-  if(hash === '#print'){ return renderPrint(); }
   return renderGuest();
 }
 
 /* ---------------- Guest flow ---------------- */
+function startGuestPolling(){
+  if(guestPollInterval) return;
+  guestPollInterval = setInterval(render, 5000);
+}
+function stopGuestPolling(){
+  if(guestPollInterval){ clearInterval(guestPollInterval); guestPollInterval = null; }
+}
+
 async function renderGuest(){
   const state = await loadAllKeys();
 
-  let step; // 'landing' | 1..4 (riddle+challenge) | 'code-2'..'code-4','code-final' | 'arrival'
+  let step; // 'landing' | 1..4 (riddle+challenge) | 'wait-2'..'wait-4','wait-final' | 'arrival'
   if(state.unlocked_final){ step = 'arrival'; }
-  else if(state.progress_4){ step = 'code-final'; }
+  else if(state.progress_4){ step = 'wait-final'; }
   else if(state.unlocked_4){ step = 4; }
-  else if(state.progress_3){ step = 'code-4'; }
+  else if(state.progress_3){ step = 'wait-4'; }
   else if(state.unlocked_3){ step = 3; }
-  else if(state.progress_2){ step = 'code-3'; }
+  else if(state.progress_2){ step = 'wait-3'; }
   else if(state.unlocked_2){ step = 2; }
-  else if(state.progress_1){ step = 'code-2'; }
+  else if(state.progress_1){ step = 'wait-2'; }
   else if(state.started){ step = 1; }
   else { step = 'landing'; }
+
+  if(typeof step === 'string' && step.startsWith('wait')){ startGuestPolling(); } else { stopGuestPolling(); }
 
   const completedCount = [state.progress_1, state.progress_2, state.progress_3, state.progress_4].filter(Boolean).length;
 
@@ -305,7 +301,7 @@ async function renderGuest(){
       ${STATIONS.map(s => {
         const done = !!state['progress_' + s.id];
         const isActive = step === s.id;
-        return `<div class="stampdot ${done?'done':''} ${isActive?'active':''}" title="${s.name}">${s.icon}</div>`;
+        return `<div class="stampdot ${done?'done':''} ${isActive?'active':''}" title="Parada ${s.id}">${s.icon}</div>`;
       }).join('')}
     </div>`;
 
@@ -339,19 +335,14 @@ async function renderGuest(){
     return;
   }
 
-  if(typeof step === 'string' && step.startsWith('code')){
-    const map = { 'code-2': [1,2], 'code-3': [2,3], 'code-4': [3,4], 'code-final': [4,'final'] };
-    const [fromId, toId] = map[step];
-    const fromStation = STATIONS.find(s => s.id === fromId);
+  if(typeof step === 'string' && step.startsWith('wait')){
     app.innerHTML = `
       ${stampsHtml}
-      <div class="card">
-        <div class="eyebrow">✦ BUSCÁ EL CÓDIGO EN ${fromStation.name.toUpperCase()} ✦</div>
+      <div class="card center">
+        <div class="eyebrow">✦ POSTA ENVIADA ✦</div>
         <h2 class="display" style="color:var(--navy);margin:8px 0;">¡Bien ahí!</h2>
-        <p>En algún lugar cerca tuyo hay un cartel con un código QR. Escaneálo con la cámara del teléfono — te va a mostrar un código. Escribilo acá abajo para desbloquear la próxima parada.</p>
-        <input type="text" id="codeInput" placeholder="Escribí el código acá" style="margin-top:10px;text-transform:uppercase;">
-        <button class="btn" style="margin-top:12px;" onclick="submitCode('${step}', ${JSON.stringify(toId)})">DESBLOQUEAR</button>
-        <div id="codeError" class="status" style="color:var(--red);"></div>
+        <p>Ya le avisamos a la familia lo que mandaste. En cuanto lo revisen te van a habilitar la próxima parada — esta página se actualiza sola, no hace falta que hagas nada.</p>
+        <div class="status">Esperando aprobación…</div>
       </div>`;
     return;
   }
@@ -362,8 +353,7 @@ async function renderGuest(){
     ${stampsHtml}
     <div class="card">
       <div class="eyebrow" style="color:${station.color}">✦ PARADA ${station.id} ✦</div>
-      <h2 class="display" style="color:var(--navy);margin:6px 0 0;font-size:30px;">${station.name}</h2>
-      <p class="mono" style="font-size:11px;color:var(--sub);letter-spacing:.1em;">${station.subtitle}</p>
+      <h2 class="display" style="color:var(--navy);margin:6px 0 0;font-size:30px;">¿Dónde estás?</h2>
       <div class="rule"><div class="line"></div><div class="dot"></div><div class="line"></div></div>
       <p style="font-style:italic;">${station.story}</p>
 
@@ -513,25 +503,6 @@ async function submitChallenge(stationId){
   render();
 }
 
-async function submitCode(step, toId){
-  const val = document.getElementById('codeInput').value.trim().toUpperCase();
-  const errEl = document.getElementById('codeError');
-  const expected = {
-    'code-2': CODES.toStation2,
-    'code-3': CODES.toStation3,
-    'code-4': CODES.toStation4,
-    'code-final': CODES.final
-  }[step];
-
-  if(val !== expected.toUpperCase()){
-    errEl.textContent = 'Ese código no es correcto — revisá el QR y probá de nuevo.';
-    return;
-  }
-  const key = toId === 'final' ? 'unlocked_final' : ('unlocked_' + toId);
-  await saveShared(key, new Date().toISOString());
-  render();
-}
-
 async function startHunt(btn){
   if(btn){ btn.disabled = true; btn.textContent = 'UN SEGUNDO…'; }
   const ok = await saveShared('started', new Date().toISOString());
@@ -545,7 +516,6 @@ async function startHunt(btn){
 window.startHunt = startHunt;
 window.selectChoice = selectChoice;
 window.submitChallenge = submitChallenge;
-window.submitCode = submitCode;
 
 /* ---------------- Admin ---------------- */
 async function renderAdmin(){
@@ -576,13 +546,15 @@ async function drawAdminTable(){
   const rows = STATIONS.map(s => {
     const p = state['progress_' + s.id];
     const unlockedKey = s.id === 1 ? true : state['unlocked_' + s.id];
-    let statusTxt, mediaHtml = '';
+    const nextKey = NEXT_UNLOCK_KEY[s.id];
+    const nextUnlockedAt = state[nextKey];
+    let statusTxt, mediaHtml = '', actionHtml = '';
     if(!unlockedKey){
       statusTxt = '⏳ Todavía no llegó';
     } else if(!p){
       statusTxt = '📍 En esta parada ahora';
     } else {
-      statusTxt = `✅ Completó opción ${p.chosen.toUpperCase()} — ${new Date(p.completedAt).toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})}`;
+      statusTxt = `📥 Mandó opción ${p.chosen.toUpperCase()} — ${new Date(p.completedAt).toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})}`;
       if(p.textAnswer){ mediaHtml = `<div style="margin-top:4px;font-style:italic;">"${p.textAnswer}"</div>`; }
       if(p.mediaTooLarge){ mediaHtml = `<div style="margin-top:4px;color:var(--red);">Archivo grande — lo va a compartir por WhatsApp aparte.</div>`; }
       if(p.media){
@@ -591,10 +563,15 @@ async function drawAdminTable(){
         else if(p.type === 'audio'){ mediaHtml = `<audio src="${p.media}" controls style="margin-top:4px;"></audio>`; }
         else { mediaHtml = `<img src="${p.media}" style="max-width:120px;display:block;margin-top:4px;">`; }
       }
+      if(nextUnlockedAt){
+        statusTxt += `<br>✅ Aprobado — ${new Date(nextUnlockedAt).toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})}`;
+      } else {
+        actionHtml = `<button class="btn small" style="margin-top:8px;" onclick="approveStation('${nextKey}')">APROBAR Y DESBLOQUEAR SIGUIENTE</button>`;
+      }
     }
     return `<tr>
       <td>${s.icon} <strong>${s.name}</strong><br><span style="font-size:11px;color:var(--sub);">${s.subtitle}</span></td>
-      <td>${statusTxt}${mediaHtml}</td>
+      <td>${statusTxt}${mediaHtml}${actionHtml}</td>
     </tr>`;
   }).join('');
 
@@ -609,34 +586,24 @@ async function drawAdminTable(){
       <div class="divider"></div>
       <p><strong>Final del recorrido:</strong> ${finalTxt}</p>
       <button class="btn small outline" onclick="drawAdminTable()">ACTUALIZAR AHORA</button>
+      <button class="btn small outline" style="margin-top:8px;color:var(--red);border-color:var(--red);" onclick="resetAll()">REINICIAR TODO EL RECORRIDO</button>
     </div>`;
 }
 window.drawAdminTable = drawAdminTable;
 
-/* ---------------- Print (QR sheet) ---------------- */
-function renderPrint(){
-  app.innerHTML = `
-    <div class="center" style="margin-bottom:10px;">
-      <div class="eyebrow">✦ HOJA PARA IMPRIMIR ✦</div>
-      <h2 class="display" style="color:var(--navy);">Códigos QR de cada parada</h2>
-      <p style="color:var(--sub);font-style:italic;">Imprimí esta página, recortá cada QR y dejalo en el lugar indicado antes del día del festejo.</p>
-    </div>
-    ${STATIONS.map((s, i) => {
-      const nextLabel = i < STATIONS.length - 1 ? `Desbloquea: ${STATIONS[i+1].name}` : 'Desbloquea: el mensaje final';
-      const code = s.unlockCode;
-      return `
-      <div class="qr-block">
-        <div class="mono" style="font-size:11px;color:${s.color};letter-spacing:.15em;">DEJAR EN: ${s.name.toUpperCase()}</div>
-        <img src="${qrImg(code)}">
-        <div class="mono" style="font-size:12px;margin-top:6px;">Código: ${code}</div>
-        <div style="font-size:13px;color:var(--sub);margin-top:2px;">${nextLabel}</div>
-      </div>`;
-    }).join('')}
-    <div class="center" style="margin-top:10px;">
-      <a href="#" class="mono" style="font-size:11px;">← Volver al recorrido</a>
-    </div>
-  `;
+async function approveStation(nextKey){
+  await saveShared(nextKey, new Date().toISOString());
+  drawAdminTable();
 }
+window.approveStation = approveStation;
+
+async function resetAll(){
+  if(!confirm('¿Seguro que querés reiniciar todo el recorrido? Se borra todo el progreso de Claudio.')) return;
+  const keys = ["started","progress_1","progress_2","progress_3","progress_4","unlocked_2","unlocked_3","unlocked_4","unlocked_final"];
+  for(const k of keys){ await saveShared(k, null); }
+  drawAdminTable();
+}
+window.resetAll = resetAll;
 </script>
 </body>
 </html>
