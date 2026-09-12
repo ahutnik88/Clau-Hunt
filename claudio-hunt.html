@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>La búsqueda de Claudio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Special+Elite&display=swap');
+
+  :root{
+    --cream:#F5EDD8;
+    --paper:#FBF6E8;
+    --navy:#1B3A6B;
+    --red:#C8102E;
+    --ink:#3D2F1A;
+    --sub:#5C4A2A;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--cream);color:var(--ink);font-family:'Cormorant Garamond',serif;}
+  .mono{font-family:'Special Elite',monospace;}
+  .display{font-family:'DM Serif Display',serif;}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 60px;}
+  .rule{display:flex;align-items:center;gap:8px;color:var(--navy);margin:14px 0;}
+  .rule .line{flex:1;height:1px;background:currentColor;opacity:.3;}
+  .rule .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.6;}
+
+  .card{background:var(--paper);border:2px solid var(--navy);padding:20px;box-shadow:5px 5px 0 var(--navy);}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    width:100%;padding:14px 16px;background:var(--navy);color:var(--paper);
+    border:none;cursor:pointer;font-family:'Special Elite',monospace;
+    font-size:13px;letter-spacing:.15em;transition:background .2s;
+  }
+  .btn:hover{background:var(--red);}
+  .btn:disabled{opacity:.35;cursor:not-allowed;}
+  .btn.outline{background:transparent;color:var(--navy);border:2px solid var(--navy);}
+  .btn.outline:hover{background:var(--navy);color:var(--paper);}
+  .btn.small{width:auto;padding:9px 14px;font-size:11px;}
+
+  .eyebrow{font-family:'Special Elite',monospace;font-size:10px;letter-spacing:.3em;color:var(--red);}
+  .locbox{border:2px dashed var(--navy);padding:12px 14px;background:var(--cream);display:flex;gap:10px;align-items:flex-start;margin:14px 0;}
+  .locbox .pin{font-size:18px;}
+  .stamps{display:flex;gap:10px;justify-content:center;margin:22px 0 6px;flex-wrap:wrap;}
+  .stampdot{
+    width:46px;height:46px;border-radius:50%;border:2px solid var(--navy);
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+    background:var(--paper);color:var(--navy);position:relative;
+  }
+  .stampdot.done{background:var(--navy);color:var(--paper);}
+  .stampdot.active{border-color:var(--red);box-shadow:0 0 0 3px rgba(200,16,46,.15);}
+
+  textarea, input[type=text]{
+    width:100%;padding:12px;border:2px solid var(--navy);background:var(--paper);
+    font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--ink);
+  }
+  textarea:focus, input[type=text]:focus{outline:none;border-color:var(--red);}
+
+  .choice{
+    border:2px solid var(--navy);padding:14px;margin-bottom:10px;cursor:pointer;
+    background:var(--paper);transition:.15s;
+  }
+  .choice.selected{border-color:var(--red);background:#fff7ee;box-shadow:3px 3px 0 var(--red);}
+  .choice h4{margin:0 0 4px;font-family:'DM Serif Display',serif;color:var(--navy);font-size:17px;}
+  .choice p{margin:0;font-size:14px;color:var(--sub);}
+
+  .filebtn{
+    display:block;width:100%;text-align:center;padding:12px;border:2px dashed var(--navy);
+    color:var(--navy);font-family:'Special Elite',monospace;font-size:12px;letter-spacing:.1em;
+    cursor:pointer;background:var(--cream);margin-top:10px;
+  }
+  input[type=file]{display:none;}
+
+  .preview{margin-top:10px;text-align:center;}
+  .preview img, .preview video{max-width:100%;border:2px solid var(--navy);}
+
+  .status{font-family:'Special Elite',monospace;font-size:11px;letter-spacing:.15em;color:var(--sub);margin-top:8px;text-align:center;}
+  .divider{height:2px;background:var(--navy);opacity:.15;margin:18px 0;}
+
+  .center{text-align:center;}
+  .hidden{display:none !important;}
+
+  a{color:var(--navy);}
+  .qr-block{background:var(--paper);border:2px solid var(--navy);padding:16px;text-align:center;margin-bottom:20px;}
+  .qr-block img{width:200px;height:200px;image-rendering:pixelated;}
+
+  table.admin{width:100%;border-collapse:collapse;font-size:14px;}
+  table.admin th, table.admin td{border:1px solid var(--navy);padding:8px;text-align:left;vertical-align:top;}
+  table.admin th{background:var(--navy);color:var(--paper);font-family:'Special Elite',monospace;font-size:10px;letter-spacing:.1em;}
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--navy);color:var(--paper);padding:12px 20px;font-family:'Special Elite',monospace;
+    font-size:12px;letter-spacing:.05em;z-index:999;max-width:90%;text-align:center;
+  }
+</style>
+</head>
+<body>
+<div id="app" class="wrap"></div>
+
+<script>
+/* =========================================================================
+   CONFIGURACIÓN — Ari: podés editar todo lo de acá abajo sin tocar el resto
+   ========================================================================= */
+
+const PASSCODE_ADMIN = "familia"; // clave simple para entrar a la vista de familia
+
+const RESTAURANT = {
+  confirmed: false, // pasá esto a true cuando tengan la dirección
+  name: "A confirmar",
+  address: "Todavía estamos definiendo si es en casa o en lo de tu cuñada — ¡pronto lo sabrás!",
+  note: "Cerrá los ojos y disfrutá, que el resto ya está organizado."
+};
+
+const CODES = {
+  toStation2: "CUBANO25",
+  toStation3: "OASIS10",
+  toStation4: "PILLIS100",
+  final: "FELICES"
+};
+
+const STATIONS = [
+  {
+    id: 1,
+    name: "Orloshusa",
+    subtitle: "El comienzo del viaje",
+    color: "#0B5D8A",
+    icon: "⛵",
+    coords: [25.995043, -80.124274],
+    story: "Este cumpleaños arranca sin que tengas que ir muy lejos. En tu propio patio te espera algo que flota, tiene nombre propio, y nunca zarpa sin vos.",
+    riddle: "Flota, pero nunca navegó demasiado lejos de tu casa. Vos la bautizaste con su nombre. No hace falta que subas a bordo — solo encontrala.",
+    challenges: [
+      { id: "a", type: "audio", label: "El ruido que la delata", instructions: "Grabá un audio haciendo el ruido que hace la lancha cuando roza contra las defensas al estacionar. Sé fiel al sonido, ¡se va a evaluar la actuación!" },
+      { id: "b", type: "photo", label: "La pose clásica", instructions: "Sacate una foto en la posición clásica de estacionamiento: parado en la parte delantera de la lancha, agarrado del palo." }
+    ],
+    unlockCode: CODES.toStation2
+  },
+  {
+    id: 2,
+    name: "El Cubano",
+    subtitle: "Las Vegas Cuisine",
+    color: "#C8102E",
+    icon: "🥪",
+    coords: [25.986908, -80.130516],
+    story: "Por fuera no gana ningún premio de decoración. Por dentro, tiene el sabor de mil meriendas compartidas y el café que te levanta mejor que cualquier despertador.",
+    riddle: "No es lindo, pero es de los tuyos. Ahí el cafecito nunca fallo, y el sanguche tiene fama bien ganada. Preguntá por él con su apodo de siempre.",
+    challenges: [
+      { id: "a", type: "video", label: "Maestro colador", instructions: "Filmate preparando una colada, con toda la técnica que te caracteriza." },
+      { id: "b", type: "text", label: "El sanguche perfecto", instructions: "Escribí cuáles son los ingredientes principales de un sándwich cubano." }
+    ],
+    unlockCode: CODES.toStation3
+  },
+  {
+    id: 3,
+    name: "Oasis Fit",
+    subtitle: "Cuerpo y disciplina",
+    color: "#2A6F4F",
+    icon: "💪",
+    coords: [25.985213, -80.137876],
+    story: "Estos últimos años te preparaste físicamente como nunca — entre entrenador personal y algún que otro masaje. Un oasis en medio de la rutina, para seguir firme.",
+    riddle: "Cuidaste el cuerpo como pocas veces en tu vida. Este lugar te vio sudar, y también relajarte. Andá a buscar tu recompensa ahí.",
+    challenges: [
+      { id: "a", type: "video", label: "Diez y contando", instructions: "Grabate haciendo 10 sentadillas (o algún otro ejercicio de 10 repeticiones), con toda la garra." },
+      { id: "b", type: "video", label: "Personal trainer por un día", instructions: "SUGERENCIA — reemplazá si tenés otra idea: grabá 15 segundos 'entrenando' a otra persona del auto, dándole una orden bien exigente de entrenador personal." }
+    ],
+    unlockCode: CODES.toStation4
+  },
+  {
+    id: 4,
+    name: "Lo de Pillis",
+    subtitle: "Pillis Bistro Café",
+    color: "#A0522D",
+    icon: "☕",
+    coords: [25.984417, -80.172785],
+    story: "La descubriste de casualidad y ya es parte de la familia: cada Shabat, cada picnic en la lancha, cada almuerzo de rutina, siempre termina acá.",
+    riddle: "La conociste sin buscarla y ya no podés dejarla. Preguntá por ella — seguro te reconoce apenas entrás.",
+    challenges: [
+      { id: "a", type: "photo", label: "La foto con Pillis", instructions: "Sacate una foto con Pillis o con la otra chica que atiende." },
+      { id: "b", type: "video_or_photo", label: "De mesero por un rato", instructions: "Serví un café o algún plato a una mesa — foto o video corto de la hazaña." }
+    ],
+    unlockCode: CODES.final
+  }
+];
+
+/* ========================================================================= */
+
+const STORAGE_PREFIX = "";
+
+async function saveShared(key, value){
+  try{
+    const res = await window.storage.set(STORAGE_PREFIX + key, JSON.stringify(value), true);
+    return !!res;
+  }catch(e){
+    console.error("storage set failed", key, e);
+    return false;
+  }
+}
+async function loadShared(key){
+  try{
+    const res = await window.storage.get(STORAGE_PREFIX + key, true);
+    return res ? JSON.parse(res.value) : null;
+  }catch(e){
+    return null;
+  }
+}
+async function loadAllKeys(){
+  const keys = ["started","progress_1","progress_2","progress_3","progress_4","unlocked_2","unlocked_3","unlocked_4","unlocked_final"];
+  const out = {};
+  for(const k of keys){ out[k] = await loadShared(k); }
+  return out;
+}
+
+function fileToCompressedImage(file, maxDim = 1000, quality = 0.6){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if(w > h && w > maxDim){ h = h*(maxDim/w); w = maxDim; }
+      else if(h > maxDim){ w = w*(maxDim/h); h = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function fileToDataURL(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function showToast(msg, ms = 3600){
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+function mapsLink(coords){
+  return `https://www.google.com/maps/search/?api=1&query=${coords[0]},${coords[1]}`;
+}
+function qrImg(text, size=220){
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+}
+
+/* ---------------- Router ---------------- */
+const app = document.getElementById('app');
+
+window.addEventListener('hashchange', render);
+render();
+
+async function render(){
+  const hash = window.location.hash;
+  if(hash === '#admin'){ return renderAdmin(); }
+  if(hash === '#print'){ return renderPrint(); }
+  return renderGuest();
+}
+
+/* ---------------- Guest flow ---------------- */
+async function renderGuest(){
+  const state = await loadAllKeys();
+
+  let step; // 'landing' | 1..4 (riddle+challenge) | 'code-2'..'code-4','code-final' | 'arrival'
+  if(state.unlocked_final){ step = 'arrival'; }
+  else if(state.progress_4){ step = 'code-final'; }
+  else if(state.unlocked_4){ step = 4; }
+  else if(state.progress_3){ step = 'code-4'; }
+  else if(state.unlocked_3){ step = 3; }
+  else if(state.progress_2){ step = 'code-3'; }
+  else if(state.unlocked_2){ step = 2; }
+  else if(state.progress_1){ step = 'code-2'; }
+  else if(state.started){ step = 1; }
+  else { step = 'landing'; }
+
+  const completedCount = [state.progress_1, state.progress_2, state.progress_3, state.progress_4].filter(Boolean).length;
+
+  const stampsHtml = `
+    <div class="stamps">
+      ${STATIONS.map(s => {
+        const done = !!state['progress_' + s.id];
+        const isActive = step === s.id;
+        return `<div class="stampdot ${done?'done':''} ${isActive?'active':''}" title="${s.name}">${s.icon}</div>`;
+      }).join('')}
+    </div>`;
+
+  if(step === 'landing'){
+    app.innerHTML = `
+      <div class="center" style="margin-top:8vh;">
+        <div class="eyebrow">✦ RECORRIDO SORPRESA ✦</div>
+        <h1 class="display" style="font-size:44px;color:var(--navy);margin:10px 0 0;">Feliz cumpleaños,</h1>
+        <h1 class="display" style="font-size:44px;color:var(--red);font-style:italic;margin:0 0 20px;">Claudio</h1>
+        <div class="rule"><div class="line"></div><div class="dot"></div><div class="line"></div></div>
+        <p style="font-size:18px;color:var(--sub);font-style:italic;">Hoy no es un día cualquiera. Te preparamos un recorrido por cuatro lugares que forman parte de tu año — y en cada uno hay algo esperándote.</p>
+        <button class="btn" style="margin-top:20px;" onclick="startHunt(this)">COMENZAR ✈</button>
+      </div>`;
+    return;
+  }
+
+  if(step === 'arrival'){
+    app.innerHTML = `
+      <div class="center" style="margin-top:8vh;">
+        <div style="font-size:56px;">🎉</div>
+        <div class="eyebrow" style="margin-top:10px;">✦ LLEGASTE AL FINAL ✦</div>
+        <h1 class="display" style="font-size:36px;color:var(--navy);margin:10px 0;">El festejo sigue en...</h1>
+        <div class="card" style="margin-top:16px;text-align:left;">
+          <h2 class="display" style="color:var(--red);margin:0 0 6px;">${RESTAURANT.name}</h2>
+          <p style="color:var(--sub);margin:0;">${RESTAURANT.address}</p>
+          <div class="divider"></div>
+          <p style="font-style:italic;">${RESTAURANT.note}</p>
+        </div>
+        <p style="margin-top:20px;color:var(--sub);font-style:italic;">Gracias por jugar, chevre. Te queremos. ❤️</p>
+      </div>`;
+    return;
+  }
+
+  if(typeof step === 'string' && step.startsWith('code')){
+    const map = { 'code-2': [1,2], 'code-3': [2,3], 'code-4': [3,4], 'code-final': [4,'final'] };
+    const [fromId, toId] = map[step];
+    const fromStation = STATIONS.find(s => s.id === fromId);
+    app.innerHTML = `
+      ${stampsHtml}
+      <div class="card">
+        <div class="eyebrow">✦ BUSCÁ EL CÓDIGO EN ${fromStation.name.toUpperCase()} ✦</div>
+        <h2 class="display" style="color:var(--navy);margin:8px 0;">¡Bien ahí!</h2>
+        <p>En algún lugar cerca tuyo hay un cartel con un código QR. Escaneálo con la cámara del teléfono — te va a mostrar un código. Escribilo acá abajo para desbloquear la próxima parada.</p>
+        <input type="text" id="codeInput" placeholder="Escribí el código acá" style="margin-top:10px;text-transform:uppercase;">
+        <button class="btn" style="margin-top:12px;" onclick="submitCode('${step}', ${JSON.stringify(toId)})">DESBLOQUEAR</button>
+        <div id="codeError" class="status" style="color:var(--red);"></div>
+      </div>`;
+    return;
+  }
+
+  // Numeric station step
+  const station = STATIONS.find(s => s.id === step);
+  app.innerHTML = `
+    ${stampsHtml}
+    <div class="card">
+      <div class="eyebrow" style="color:${station.color}">✦ PARADA ${station.id} ✦</div>
+      <h2 class="display" style="color:var(--navy);margin:6px 0 0;font-size:30px;">${station.name}</h2>
+      <p class="mono" style="font-size:11px;color:var(--sub);letter-spacing:.1em;">${station.subtitle}</p>
+      <div class="rule"><div class="line"></div><div class="dot"></div><div class="line"></div></div>
+      <p style="font-style:italic;">${station.story}</p>
+
+      <div class="locbox">
+        <div class="pin">📍</div>
+        <div>
+          <div class="mono" style="font-size:10px;color:var(--navy);letter-spacing:.2em;opacity:.7;">LA PISTA</div>
+          <p style="margin:4px 0 8px;">${station.riddle}</p>
+          <a href="${mapsLink(station.coords)}" target="_blank" class="mono" style="font-size:11px;letter-spacing:.1em;">¿Perdido? Ver ubicación en el mapa →</a>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="eyebrow" style="color:${station.color}">EL DESAFÍO — ELEGÍ UNA OPCIÓN</div>
+      <div id="choices" style="margin-top:10px;"></div>
+      <div id="challengeBody"></div>
+      <button class="btn" id="submitBtn" style="margin-top:14px;display:none;" onclick="submitChallenge(${station.id})">COMPLETAR PARADA</button>
+      <div id="stationStatus" class="status"></div>
+    </div>`;
+
+  renderChoices(station);
+}
+
+let selectedChallenge = null;
+let selectedFileData = null;
+let selectedFileTooLarge = false;
+
+function renderChoices(station){
+  selectedChallenge = null; selectedFileData = null; selectedFileTooLarge = false;
+  const container = document.getElementById('choices');
+  container.innerHTML = station.challenges.map(c => `
+    <div class="choice" id="choice-${c.id}" onclick="selectChoice('${station.id}','${c.id}')">
+      <h4>Opción ${c.id.toUpperCase()}: ${c.label}</h4>
+      <p>${c.instructions}</p>
+    </div>`).join('');
+}
+
+function selectChoice(stationId, choiceId){
+  const station = STATIONS.find(s => s.id == stationId);
+  const challenge = station.challenges.find(c => c.id === choiceId);
+  selectedChallenge = challenge;
+  selectedFileData = null;
+  selectedFileTooLarge = false;
+
+  document.querySelectorAll('.choice').forEach(el => el.classList.remove('selected'));
+  document.getElementById('choice-' + choiceId).classList.add('selected');
+
+  const body = document.getElementById('challengeBody');
+  const submitBtn = document.getElementById('submitBtn');
+
+  if(challenge.type === 'text'){
+    body.innerHTML = `<textarea id="textAnswer" rows="3" placeholder="Escribí tu respuesta acá..." style="margin-top:12px;"></textarea>`;
+  } else {
+    let accept = 'image/*', capture = 'environment', label = '📸 Sacar foto';
+    if(challenge.type === 'audio'){ accept = 'audio/*'; label = '🎙️ Grabar audio'; }
+    if(challenge.type === 'video'){ accept = 'video/*'; label = '🎥 Grabar video'; }
+    if(challenge.type === 'video_or_photo'){ accept = 'image/*,video/*'; label = '📸🎥 Foto o video'; }
+    body.innerHTML = `
+      <label class="filebtn" id="fileLabel">${label}
+        <input type="file" id="fileInput" accept="${accept}" capture="${capture}">
+      </label>
+      <div class="preview" id="filePreview"></div>`;
+    document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+  }
+  submitBtn.style.display = 'flex';
+  document.getElementById('stationStatus').textContent = '';
+}
+
+async function handleFileSelect(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const preview = document.getElementById('filePreview');
+  preview.innerHTML = '<div class="status">Procesando…</div>';
+
+  try{
+    if(file.type.startsWith('image/')){
+      selectedFileData = await fileToCompressedImage(file);
+      preview.innerHTML = `<img src="${selectedFileData}">`;
+      selectedFileTooLarge = false;
+    } else {
+      // video / audio — check raw size before attempting to store
+      const approxEncodedMB = (file.size * 1.37) / (1024*1024);
+      if(approxEncodedMB > 4.2){
+        selectedFileTooLarge = true;
+        selectedFileData = null;
+        preview.innerHTML = `<div class="status" style="color:var(--red);">Este archivo es grande para guardarlo acá. Igual vamos a marcar la posta como completada — después mandalo por WhatsApp a la familia. 📲</div>`;
+      } else {
+        selectedFileData = await fileToDataURL(file);
+        selectedFileTooLarge = false;
+        preview.innerHTML = file.type.startsWith('video/')
+          ? `<video src="${selectedFileData}" controls></video>`
+          : `<audio src="${selectedFileData}" controls style="width:100%;"></audio>`;
+      }
+    }
+  }catch(err){
+    preview.innerHTML = `<div class="status" style="color:var(--red);">No se pudo procesar el archivo. Probá de nuevo.</div>`;
+  }
+}
+
+async function submitChallenge(stationId){
+  const station = STATIONS.find(s => s.id === stationId);
+  if(!selectedChallenge){ showToast('Elegí una opción primero'); return; }
+
+  const statusEl = document.getElementById('stationStatus');
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  statusEl.textContent = 'Guardando…';
+
+  let payload = {
+    stationId,
+    chosen: selectedChallenge.id,
+    label: selectedChallenge.label,
+    type: selectedChallenge.type,
+    completedAt: new Date().toISOString(),
+    mediaTooLarge: false
+  };
+
+  if(selectedChallenge.type === 'text'){
+    const val = document.getElementById('textAnswer').value.trim();
+    if(!val){ statusEl.textContent = ''; submitBtn.disabled = false; showToast('Escribí una respuesta antes de continuar'); return; }
+    payload.textAnswer = val;
+  } else {
+    if(selectedFileTooLarge){
+      payload.mediaTooLarge = true;
+    } else if(selectedFileData){
+      payload.media = selectedFileData;
+    } else {
+      statusEl.textContent = '';
+      submitBtn.disabled = false;
+      showToast('Subí una foto/video/audio antes de continuar');
+      return;
+    }
+  }
+
+  const ok = await saveShared('progress_' + stationId, payload);
+  if(!ok){
+    // retry once without media in case of size rejection
+    const lean = {...payload, media: undefined, mediaTooLarge: true};
+    const ok2 = await saveShared('progress_' + stationId, lean);
+    if(!ok2){
+      statusEl.textContent = '';
+      submitBtn.disabled = false;
+      showToast('Hubo un problema guardando. Probá de nuevo.');
+      return;
+    }
+  }
+  render();
+}
+
+async function submitCode(step, toId){
+  const val = document.getElementById('codeInput').value.trim().toUpperCase();
+  const errEl = document.getElementById('codeError');
+  const expected = {
+    'code-2': CODES.toStation2,
+    'code-3': CODES.toStation3,
+    'code-4': CODES.toStation4,
+    'code-final': CODES.final
+  }[step];
+
+  if(val !== expected.toUpperCase()){
+    errEl.textContent = 'Ese código no es correcto — revisá el QR y probá de nuevo.';
+    return;
+  }
+  const key = toId === 'final' ? 'unlocked_final' : ('unlocked_' + toId);
+  await saveShared(key, new Date().toISOString());
+  render();
+}
+
+async function startHunt(btn){
+  if(btn){ btn.disabled = true; btn.textContent = 'UN SEGUNDO…'; }
+  const ok = await saveShared('started', new Date().toISOString());
+  if(!ok && btn){
+    btn.disabled = false; btn.textContent = 'COMENZAR ✈';
+    showToast('No se pudo guardar. Probá de nuevo.');
+    return;
+  }
+  render();
+}
+window.startHunt = startHunt;
+window.selectChoice = selectChoice;
+window.submitChallenge = submitChallenge;
+window.submitCode = submitCode;
+
+/* ---------------- Admin ---------------- */
+let adminUnlocked = false;
+let adminInterval = null;
+
+async function renderAdmin(){
+  if(!adminUnlocked){
+    app.innerHTML = `
+      <div class="card" style="margin-top:10vh;">
+        <div class="eyebrow">✦ VISTA DE FAMILIA ✦</div>
+        <h2 class="display" style="color:var(--navy);">Seguimiento en vivo</h2>
+        <input type="text" id="adminPass" placeholder="Clave de familia" style="margin-top:10px;">
+        <button class="btn" style="margin-top:12px;" onclick="tryAdminLogin()">ENTRAR</button>
+        <div id="adminErr" class="status" style="color:var(--red);"></div>
+      </div>`;
+    return;
+  }
+  await drawAdminTable();
+  if(!adminInterval){ adminInterval = setInterval(drawAdminTable, 5000); }
+}
+
+function tryAdminLogin(){
+  const val = document.getElementById('adminPass').value;
+  if(val === PASSCODE_ADMIN){ adminUnlocked = true; render(); }
+  else { document.getElementById('adminErr').textContent = 'Clave incorrecta.'; }
+}
+window.tryAdminLogin = tryAdminLogin;
+
+async function drawAdminTable(){
+  const state = await loadAllKeys();
+  const rows = STATIONS.map(s => {
+    const p = state['progress_' + s.id];
+    const unlockedKey = s.id === 1 ? true : state['unlocked_' + s.id];
+    let statusTxt, mediaHtml = '';
+    if(!unlockedKey){
+      statusTxt = '⏳ Todavía no llegó';
+    } else if(!p){
+      statusTxt = '📍 En esta parada ahora';
+    } else {
+      statusTxt = `✅ Completó opción ${p.chosen.toUpperCase()} — ${new Date(p.completedAt).toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})}`;
+      if(p.textAnswer){ mediaHtml = `<div style="margin-top:4px;font-style:italic;">"${p.textAnswer}"</div>`; }
+      if(p.mediaTooLarge){ mediaHtml = `<div style="margin-top:4px;color:var(--red);">Archivo grande — lo va a compartir por WhatsApp aparte.</div>`; }
+      if(p.media){
+        if(p.type === 'photo'){ mediaHtml = `<img src="${p.media}" style="max-width:120px;display:block;margin-top:4px;">`; }
+        else if(p.type === 'video' || (p.type==='video_or_photo' && p.media.startsWith('data:video'))){ mediaHtml = `<video src="${p.media}" controls style="max-width:160px;display:block;margin-top:4px;"></video>`; }
+        else if(p.type === 'audio'){ mediaHtml = `<audio src="${p.media}" controls style="margin-top:4px;"></audio>`; }
+        else { mediaHtml = `<img src="${p.media}" style="max-width:120px;display:block;margin-top:4px;">`; }
+      }
+    }
+    return `<tr>
+      <td>${s.icon} <strong>${s.name}</strong><br><span style="font-size:11px;color:var(--sub);">${s.subtitle}</span></td>
+      <td>${statusTxt}${mediaHtml}</td>
+    </tr>`;
+  }).join('');
+
+  const finalTxt = state.unlocked_final ? `🎉 ¡Llegó al final! (${new Date(state.unlocked_final).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})})` : '⏳ Todavía no llegó al final';
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="eyebrow">✦ VISTA DE FAMILIA ✦</div>
+      <h2 class="display" style="color:var(--navy);">Cómo va Claudio</h2>
+      <p class="status" style="text-align:left;">Se actualiza solo cada 5 segundos.</p>
+      <table class="admin">${rows}</table>
+      <div class="divider"></div>
+      <p><strong>Final del recorrido:</strong> ${finalTxt}</p>
+      <button class="btn small outline" onclick="drawAdminTable()">ACTUALIZAR AHORA</button>
+    </div>`;
+}
+window.drawAdminTable = drawAdminTable;
+
+/* ---------------- Print (QR sheet) ---------------- */
+function renderPrint(){
+  app.innerHTML = `
+    <div class="center" style="margin-bottom:10px;">
+      <div class="eyebrow">✦ HOJA PARA IMPRIMIR ✦</div>
+      <h2 class="display" style="color:var(--navy);">Códigos QR de cada parada</h2>
+      <p style="color:var(--sub);font-style:italic;">Imprimí esta página, recortá cada QR y dejalo en el lugar indicado antes del día del festejo.</p>
+    </div>
+    ${STATIONS.map((s, i) => {
+      const nextLabel = i < STATIONS.length - 1 ? `Desbloquea: ${STATIONS[i+1].name}` : 'Desbloquea: el mensaje final';
+      const code = s.unlockCode;
+      return `
+      <div class="qr-block">
+        <div class="mono" style="font-size:11px;color:${s.color};letter-spacing:.15em;">DEJAR EN: ${s.name.toUpperCase()}</div>
+        <img src="${qrImg(code)}">
+        <div class="mono" style="font-size:12px;margin-top:6px;">Código: ${code}</div>
+        <div style="font-size:13px;color:var(--sub);margin-top:2px;">${nextLabel}</div>
+      </div>`;
+    }).join('')}
+    <div class="center" style="margin-top:10px;">
+      <a href="#" class="mono" style="font-size:11px;">← Volver al recorrido</a>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
