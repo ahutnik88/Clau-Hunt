@@ -104,6 +104,10 @@
 
 const PASSCODE_ADMIN = "familia"; // clave simple para entrar a la vista de familia
 
+// Ari: pegá acá la URL de tu Realtime Database de Firebase (ver instrucciones para crearla).
+// Ejemplo: "https://clau-hunt-default-rtdb.firebaseio.com"
+const FIREBASE_DB_URL = "";
+
 const RESTAURANT = {
   confirmed: false, // pasá esto a true cuando tengan la dirección
   name: "A confirmar",
@@ -183,21 +187,31 @@ const STATIONS = [
 
 /* ========================================================================= */
 
-const STORAGE_PREFIX = "";
+const STORAGE_PREFIX = "clau_hunt/";
 
 async function saveShared(key, value){
+  if(!FIREBASE_DB_URL){
+    console.error("Falta configurar FIREBASE_DB_URL");
+    return false;
+  }
   try{
-    const res = await window.storage.set(STORAGE_PREFIX + key, JSON.stringify(value), true);
-    return !!res;
+    const res = await fetch(`${FIREBASE_DB_URL}/${STORAGE_PREFIX}${key}.json`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(value)
+    });
+    return res.ok;
   }catch(e){
     console.error("storage set failed", key, e);
     return false;
   }
 }
 async function loadShared(key){
+  if(!FIREBASE_DB_URL) return null;
   try{
-    const res = await window.storage.get(STORAGE_PREFIX + key, true);
-    return res ? JSON.parse(res.value) : null;
+    const res = await fetch(`${FIREBASE_DB_URL}/${STORAGE_PREFIX}${key}.json`);
+    if(!res.ok) return null;
+    return await res.json();
   }catch(e){
     return null;
   }
