@@ -106,13 +106,7 @@ const PASSCODE_ADMIN = "familia"; // clave simple para entrar a la vista de fami
 // Ejemplo: "https://clau-hunt-default-rtdb.firebaseio.com"
 const FIREBASE_DB_URL = "https://clau-hunt-default-rtdb.firebaseio.com";
 
-const RESTAURANT = {
-  confirmed: false, // pasá esto a true cuando tengan la dirección
-  name: "A confirmar",
-  address: "Todavía estamos definiendo si es en casa o en lo de tu cuñada — ¡pronto lo sabrás!",
-  coords: [25.953527, -80.135926],
-  note: "Cerrá los ojos y disfrutá, que el resto ya está organizado."
-};
+const FINAL_COORDS = [25.953527, -80.135926]; // coordenadas de la casa en Aventura
 
 const STATIONS = [
   {
@@ -321,36 +315,17 @@ async function renderGuest(){
   }
 
   if(step === 'arrival'){
-    if(!finalRevealed){
-      app.innerHTML = `
-        <div class="center" style="margin-top:6vh;">
-          <div class="eyebrow">✦ LLEGASTE AL FINAL ✦</div>
-          <h1 class="display" style="font-size:32px;color:var(--navy);margin:10px 0;">El festejo sigue en...</h1>
-          <div class="card" style="text-align:left;">
-            <p class="display" style="color:var(--red);font-style:italic;font-size:22px;margin:0 0 12px;">"¡Qué aventura vivir en Hollywood!"</p>
-            <div class="locbox">
-              <div class="pin">📍</div>
-              <div>
-                <div class="mono" style="font-size:13px;color:var(--navy);letter-spacing:.15em;opacity:.8;">LA PISTA</div>
-                <p style="margin:4px 0 8px;">Pero hoy no hay alfombra roja ni cámaras: la fiesta sigue en la ciudad cuyo nombre es, ni más ni menos, la palabra que mejor resume lo que es tu vida.</p>
-                ${RESTAURANT.coords ? `<a href="${mapsLink(RESTAURANT.coords)}" target="_blank" class="mono" style="font-size:14px;letter-spacing:.05em;">¿Perdido? Ver ubicación en el mapa →</a>` : ''}
-              </div>
-            </div>
-            <button class="btn" style="margin-top:14px;" onclick="revealFinal()">YA LO DESCUBRÍ →</button>
-          </div>
-        </div>`;
-      return;
-    }
     app.innerHTML = `
-      <div class="center" style="margin-top:8vh;">
+      <div class="center" style="margin-top:6vh;">
         <div style="font-size:56px;">🎉</div>
         <div class="eyebrow" style="margin-top:10px;">✦ LLEGASTE AL FINAL ✦</div>
-        <h1 class="display" style="font-size:36px;color:var(--navy);margin:10px 0;">El festejo sigue en...</h1>
-        <div class="card" style="margin-top:16px;text-align:left;">
-          <h2 class="display" style="color:var(--red);margin:0 0 6px;">${RESTAURANT.name}</h2>
-          <p style="color:var(--sub);margin:0;">${RESTAURANT.address}</p>
+        <h1 class="display" style="font-size:34px;color:var(--navy);margin:10px 0;">El festejo sigue en...</h1>
+        <div class="card" style="text-align:left;">
+          <p class="display" style="color:var(--red);font-style:italic;font-size:22px;margin:0 0 12px;">"¡Qué aventura vivir en Hollywood!"</p>
+          <p>Unos en el PARC y otros en los GARDENS. ¿3341 o 3300? En Aventura nunca te terminan de aclarar bien la dirección…</p>
           <div class="divider"></div>
-          <p style="font-style:italic;">${RESTAURANT.note}</p>
+          <p style="font-style:italic;">Pero hoy no hay alfombra roja ni cámaras, y aunque Dori pidió estar presente, te esperamos a todos en estas coordenadas.</p>
+          <a href="${mapsLink(FINAL_COORDS)}" target="_blank" class="btn" style="margin-top:14px;">VER UBICACIÓN EN EL MAPA →</a>
         </div>
         <p style="margin-top:20px;color:var(--sub);font-style:italic;">Gracias por jugar, chevre. Te queremos. ❤️</p>
       </div>`;
@@ -410,14 +385,7 @@ function confirmArrival(stationId){
 }
 window.confirmArrival = confirmArrival;
 
-function revealFinal(){
-  finalRevealed = true;
-  render();
-}
-window.revealFinal = revealFinal;
-
 let arrivedStationId = null;
-let finalRevealed = false;
 let selectedChallenge = null;
 let selectedFileData = null;
 let selectedFileTooLarge = false;
