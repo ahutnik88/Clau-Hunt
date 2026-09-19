@@ -121,7 +121,7 @@ const STATIONS = [
     color: "#0B5D8A",
     icon: "⛵",
     coords: [25.995043, -80.124274],
-    story: "Este cumpleaños arranca sin que tengas que ir muy lejos. En tu propio patio te espera algo que flota, tiene nombre propio, y nunca zarpa sin vos.",
+    story: "Este juego arranca sin que tengas que ir muy lejos.",
     riddle: "Flota, pero nunca navegó demasiado lejos de tu casa. Vos la bautizaste con su nombre. No hace falta que subas a bordo — solo encontrala.",
     challenges: [
       { id: "a", type: "audio", label: "El ruido que la delata", instructions: "Grabá un audio haciendo el ruido que hace la lancha cuando roza contra las defensas al estacionar. Sé fiel al sonido, ¡se va a evaluar la actuación!" },
@@ -307,10 +307,11 @@ async function renderGuest(){
 
   if(step === 'landing'){
     app.innerHTML = `
-      <div class="center" style="margin-top:8vh;">
-        <div class="eyebrow">✦ RECORRIDO SORPRESA ✦</div>
-        <h1 class="display" style="font-size:44px;color:var(--navy);margin:10px 0 0;">Feliz cumpleaños,</h1>
-        <h1 class="display" style="font-size:44px;color:var(--red);font-style:italic;margin:0 0 20px;">Claudio</h1>
+      <div class="center" style="margin-top:2vh;">
+        <img src="portada.jpg" alt="" style="width:100%;border:2px solid var(--navy);box-shadow:5px 5px 0 var(--navy);">
+        <div class="eyebrow" style="margin-top:20px;">✦ RECORRIDO SORPRESA ✦</div>
+        <h1 class="display" style="font-size:44px;color:var(--navy);margin:10px 0 0;">Feliz Cumple</h1>
+        <h1 class="display" style="font-size:44px;color:var(--red);font-style:italic;margin:0 0 20px;">Caco</h1>
         <div class="rule"><div class="line"></div><div class="dot"></div><div class="line"></div></div>
         <p style="font-size:18px;color:var(--sub);font-style:italic;">Hoy no es un día cualquiera. Te preparamos un recorrido por cuatro lugares que forman parte de tu año — y en cada uno hay algo esperándote.</p>
         <button class="btn" style="margin-top:20px;" onclick="startHunt(this)">COMENZAR ✈</button>
@@ -349,6 +350,7 @@ async function renderGuest(){
 
   // Numeric station step
   const station = STATIONS.find(s => s.id === step);
+  const arrived = arrivedStationId === station.id;
   app.innerHTML = `
     ${stampsHtml}
     <div class="card">
@@ -366,17 +368,28 @@ async function renderGuest(){
         </div>
       </div>
 
+      ${arrived ? `
       <div class="divider"></div>
       <div class="eyebrow" style="color:${station.color}">EL DESAFÍO — ELEGÍ UNA OPCIÓN</div>
       <div id="choices" style="margin-top:10px;"></div>
       <div id="challengeBody"></div>
       <button class="btn" id="submitBtn" style="margin-top:14px;display:none;" onclick="submitChallenge(${station.id})">COMPLETAR PARADA</button>
       <div id="stationStatus" class="status"></div>
+      ` : `
+      <button class="btn" style="margin-top:14px;" onclick="confirmArrival(${station.id})">YA ESTOY AQUÍ</button>
+      `}
     </div>`;
 
-  renderChoices(station);
+  if(arrived){ renderChoices(station); }
 }
 
+function confirmArrival(stationId){
+  arrivedStationId = stationId;
+  render();
+}
+window.confirmArrival = confirmArrival;
+
+let arrivedStationId = null;
 let selectedChallenge = null;
 let selectedFileData = null;
 let selectedFileTooLarge = false;
