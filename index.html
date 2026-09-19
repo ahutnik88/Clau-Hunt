@@ -135,8 +135,8 @@ const STATIONS = [
     color: "#C8102E",
     icon: "🥪",
     coords: [25.986908, -80.130516],
-    story: "Por fuera no gana ningún premio de decoración. Por dentro, tiene el sabor de mil meriendas compartidas y el café que te levanta mejor que cualquier despertador.",
-    riddle: "No es lindo, pero es de los tuyos. Ahí el cafecito nunca fallo, y el sanguche tiene fama bien ganada. Preguntá por él con su apodo de siempre.",
+    story: "",
+    riddle: "No es lindo, pero es de los tuyos. Tiene el sabor de mil cenas compartidas. Ahí el cafecito nunca falló, y el sanguche tiene fama bien ganada.",
     challenges: [
       { id: "a", type: "video", label: "Maestro colador", instructions: "Filmate preparando una colada, con toda la técnica que te caracteriza." },
       { id: "b", type: "text", label: "El sanguche perfecto", instructions: "Escribí cuáles son los ingredientes principales de un sándwich cubano." }
@@ -149,8 +149,8 @@ const STATIONS = [
     color: "#2A6F4F",
     icon: "💪",
     coords: [25.985213, -80.137876],
-    story: "Estos últimos años te preparaste físicamente como nunca — entre entrenador personal y algún que otro masaje. Un oasis en medio de la rutina, para seguir firme.",
-    riddle: "Cuidaste el cuerpo como pocas veces en tu vida. Este lugar te vio sudar, y también relajarte. Andá a buscar tu recompensa ahí.",
+    story: "",
+    riddle: "Estos últimos años te preparaste físicamente como nunca. Este lugar te vio sudar, y también relajarte. Andá a buscar tu recompensa ahí.",
     challenges: [
       { id: "a", type: "video", label: "Diez y contando", instructions: "Grabate haciendo 10 sentadillas (o algún otro ejercicio de 10 repeticiones), con toda la garra." },
       { id: "b", type: "video", label: "Personal trainer por un día", instructions: "SUGERENCIA — reemplazá si tenés otra idea: grabá 15 segundos 'entrenando' a otra persona del auto, dándole una orden bien exigente de entrenador personal." }
@@ -158,15 +158,15 @@ const STATIONS = [
   },
   {
     id: 4,
-    name: "Lo de Pillis",
-    subtitle: "Pillis Bistro Café",
+    name: "Lo de Pili's",
+    subtitle: "Pili's Bistro Café",
     color: "#A0522D",
     icon: "☕",
     coords: [25.984417, -80.172785],
-    story: "La descubriste de casualidad y ya es parte de la familia: cada Shabat, cada picnic en la lancha, cada almuerzo de rutina, siempre termina acá.",
-    riddle: "La conociste sin buscarla y ya no podés dejarla. Preguntá por ella — seguro te reconoce apenas entrás.",
+    story: "",
+    riddle: "La descubriste de casualidad y ya es parte de la familia: cada Shabat, cada picnic en la lancha, cada almuerzo de rutina, siempre termina acá.",
     challenges: [
-      { id: "a", type: "photo", label: "La foto con Pillis", instructions: "Sacate una foto con Pillis o con la otra chica que atiende." },
+      { id: "a", type: "photo", label: "La foto con Pili's", instructions: "Sacate una foto con Pili's o con la otra chica que atiende." },
       { id: "b", type: "video_or_photo", label: "De mesero por un rato", instructions: "Serví un café o algún plato a una mesa — foto o video corto de la hazaña." }
     ]
   }
@@ -357,7 +357,7 @@ async function renderGuest(){
       <div class="eyebrow" style="color:${station.color}">✦ PARADA ${station.id} ✦</div>
       <h2 class="display" style="color:var(--navy);margin:6px 0 0;font-size:30px;">¿Dónde estás?</h2>
       <div class="rule"><div class="line"></div><div class="dot"></div><div class="line"></div></div>
-      <p style="font-style:italic;">${station.story}</p>
+      ${station.story ? `<p style="font-style:italic;">${station.story}</p>` : ''}
 
       <div class="locbox">
         <div class="pin">📍</div>
