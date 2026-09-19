@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <title>La búsqueda de Claudio</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Special+Elite&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Special+Elite&display=swap');
 
   :root{
     --cream:#F5EDD8;
@@ -16,9 +16,9 @@
     --sub:#5C4A2A;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--cream);color:var(--ink);font-family:'Cormorant Garamond',serif;}
+  body{margin:0;background:var(--cream);color:var(--ink);font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;line-height:1.55;}
   .mono{font-family:'Special Elite',monospace;}
-  .display{font-family:'DM Serif Display',serif;}
+  .display{font-family:'DM Serif Display',serif;font-weight:700;}
   .wrap{max-width:640px;margin:0 auto;padding:20px 16px 60px;}
   .rule{display:flex;align-items:center;gap:8px;color:var(--navy);margin:14px 0;}
   .rule .line{flex:1;height:1px;background:currentColor;opacity:.3;}
@@ -29,17 +29,17 @@
     display:inline-flex;align-items:center;justify-content:center;gap:10px;
     width:100%;padding:14px 16px;background:var(--navy);color:var(--paper);
     border:none;cursor:pointer;font-family:'Special Elite',monospace;
-    font-size:13px;letter-spacing:.15em;transition:background .2s;
+    font-size:15px;letter-spacing:.12em;transition:background .2s;
   }
   .btn:hover{background:var(--red);}
   .btn:disabled{opacity:.35;cursor:not-allowed;}
   .btn.outline{background:transparent;color:var(--navy);border:2px solid var(--navy);}
   .btn.outline:hover{background:var(--navy);color:var(--paper);}
-  .btn.small{width:auto;padding:9px 14px;font-size:11px;}
+  .btn.small{width:auto;padding:9px 14px;font-size:13px;}
 
-  .eyebrow{font-family:'Special Elite',monospace;font-size:10px;letter-spacing:.3em;color:var(--red);}
+  .eyebrow{font-family:'Special Elite',monospace;font-size:13px;letter-spacing:.2em;color:var(--red);}
   .locbox{border:2px dashed var(--navy);padding:12px 14px;background:var(--cream);display:flex;gap:10px;align-items:flex-start;margin:14px 0;}
-  .locbox .pin{font-size:18px;}
+  .locbox .pin{font-size:22px;}
   .stamps{display:flex;gap:10px;justify-content:center;margin:22px 0 6px;flex-wrap:wrap;}
   .stampdot{
     width:46px;height:46px;border-radius:50%;border:2px solid var(--navy);
@@ -51,7 +51,7 @@
 
   textarea, input[type=text]{
     width:100%;padding:12px;border:2px solid var(--navy);background:var(--paper);
-    font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--ink);
+    font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--ink);
   }
   textarea:focus, input[type=text]:focus{outline:none;border-color:var(--red);}
 
@@ -60,12 +60,12 @@
     background:var(--paper);transition:.15s;
   }
   .choice.selected{border-color:var(--red);background:#fff7ee;box-shadow:3px 3px 0 var(--red);}
-  .choice h4{margin:0 0 4px;font-family:'DM Serif Display',serif;color:var(--navy);font-size:17px;}
-  .choice p{margin:0;font-size:14px;color:var(--sub);}
+  .choice h4{margin:0 0 4px;font-family:'DM Serif Display',serif;font-weight:700;color:var(--navy);font-size:20px;}
+  .choice p{margin:0;font-size:17px;color:var(--sub);}
 
   .filebtn{
     display:block;width:100%;text-align:center;padding:12px;border:2px dashed var(--navy);
-    color:var(--navy);font-family:'Special Elite',monospace;font-size:12px;letter-spacing:.1em;
+    color:var(--navy);font-family:'Special Elite',monospace;font-size:14px;letter-spacing:.08em;
     cursor:pointer;background:var(--cream);margin-top:10px;
   }
   input[type=file]{display:none;}
@@ -73,7 +73,7 @@
   .preview{margin-top:10px;text-align:center;}
   .preview img, .preview video{max-width:100%;border:2px solid var(--navy);}
 
-  .status{font-family:'Special Elite',monospace;font-size:11px;letter-spacing:.15em;color:var(--sub);margin-top:8px;text-align:center;}
+  .status{font-family:'Special Elite',monospace;font-size:14px;letter-spacing:.1em;color:var(--sub);margin-top:8px;text-align:center;}
   .divider{height:2px;background:var(--navy);opacity:.15;margin:18px 0;}
 
   .center{text-align:center;}
@@ -81,14 +81,14 @@
 
   a{color:var(--navy);}
 
-  table.admin{width:100%;border-collapse:collapse;font-size:14px;}
+  table.admin{width:100%;border-collapse:collapse;font-size:15px;}
   table.admin th, table.admin td{border:1px solid var(--navy);padding:8px;text-align:left;vertical-align:top;}
-  table.admin th{background:var(--navy);color:var(--paper);font-family:'Special Elite',monospace;font-size:10px;letter-spacing:.1em;}
+  table.admin th{background:var(--navy);color:var(--paper);font-family:'Special Elite',monospace;font-size:12px;letter-spacing:.1em;}
 
   .toast{
     position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
     background:var(--navy);color:var(--paper);padding:12px 20px;font-family:'Special Elite',monospace;
-    font-size:12px;letter-spacing:.05em;z-index:999;max-width:90%;text-align:center;
+    font-size:14px;letter-spacing:.05em;z-index:999;max-width:90%;text-align:center;
   }
 </style>
 </head>
@@ -313,7 +313,7 @@ async function renderGuest(){
         <h1 class="display" style="font-size:44px;color:var(--navy);margin:10px 0 0;">Feliz Cumple</h1>
         <h1 class="display" style="font-size:44px;color:var(--red);font-style:italic;margin:0 0 20px;">Caco</h1>
         <div class="rule"><div class="line"></div><div class="dot"></div><div class="line"></div></div>
-        <p style="font-size:18px;color:var(--sub);font-style:italic;">Hoy no es un día cualquiera. Te preparamos un recorrido por cuatro lugares que forman parte de tu año — y en cada uno hay algo esperándote.</p>
+        <p style="font-size:20px;color:var(--sub);font-style:italic;">Hoy no es un día cualquiera. Te preparamos un recorrido por cuatro lugares que forman parte de tu año — y en cada uno hay algo esperándote.</p>
         <button class="btn" style="margin-top:20px;" onclick="startHunt(this)">COMENZAR ✈</button>
       </div>`;
     return;
@@ -362,9 +362,9 @@ async function renderGuest(){
       <div class="locbox">
         <div class="pin">📍</div>
         <div>
-          <div class="mono" style="font-size:10px;color:var(--navy);letter-spacing:.2em;opacity:.7;">LA PISTA</div>
+          <div class="mono" style="font-size:13px;color:var(--navy);letter-spacing:.15em;opacity:.8;">LA PISTA</div>
           <p style="margin:4px 0 8px;">${station.riddle}</p>
-          <a href="${mapsLink(station.coords)}" target="_blank" class="mono" style="font-size:11px;letter-spacing:.1em;">¿Perdido? Ver ubicación en el mapa →</a>
+          <a href="${mapsLink(station.coords)}" target="_blank" class="mono" style="font-size:14px;letter-spacing:.05em;">¿Perdido? Ver ubicación en el mapa →</a>
         </div>
       </div>
 
@@ -583,7 +583,7 @@ async function drawAdminTable(){
       }
     }
     return `<tr>
-      <td>${s.icon} <strong>${s.name}</strong><br><span style="font-size:11px;color:var(--sub);">${s.subtitle}</span></td>
+      <td>${s.icon} <strong>${s.name}</strong><br><span style="font-size:13px;color:var(--sub);">${s.subtitle}</span></td>
       <td>${statusTxt}${mediaHtml}${actionHtml}</td>
     </tr>`;
   }).join('');
